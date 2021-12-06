@@ -1,6 +1,0 @@
-/home/ou/workspace/clion_ws/pc_utils/cmake-build-debug/CMakeFiles/rebuild_cache.dir
-/home/ou/workspace/clion_ws/pc_utils/cmake-build-debug/CMakeFiles/edit_cache.dir
-/home/ou/workspace/clion_ws/pc_utils/cmake-build-debug/CMakeFiles/pc_utils.dir
-/home/ou/workspace/clion_ws/pc_utils/cmake-build-debug/test/CMakeFiles/rebuild_cache.dir
-/home/ou/workspace/clion_ws/pc_utils/cmake-build-debug/test/CMakeFiles/edit_cache.dir
-/home/ou/workspace/clion_ws/pc_utils/cmake-build-debug/test/CMakeFiles/test_pc.dir
