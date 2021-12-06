@@ -108,6 +108,8 @@ TEST(pc_utils, filter_from_params) {
         filter->filter(input, output);
         display_filter_result(filter->class_name(), input, output);
     }
+
+
     auto pose = Eigen::AngleAxisf(M_PI_4, Eigen::Vector3f::UnitZ()) * Eigen::Isometry3f::Identity();
     auto dxyz = Eigen::Vector3f{15, 15, 15};
     if (auto filter = FilterFactoryParams::BuildT<std::shared_ptr>(pc_utils::ns("CropOBoxFilter"),
@@ -146,6 +148,21 @@ TEST(pc_utils, filter_from_params) {
         display_filter_result(filter->class_name(), input, output);
     }
 
+
+    if (auto filter = FilterFactoryParams::BuildT<std::shared_ptr>(pc_utils::ns("MaxPointCount"),
+                                                                   Params{{"count", "1000"}});filter) {
+        PCXYZPtr output(new PCXYZ);
+        filter->filter(input, output);
+        display_filter_result(filter->class_name(), input, output);
+    }
+
+
+    if (auto filter = FilterFactoryParams::BuildT<std::shared_ptr>(pc_utils::ns("RandomSampling"),
+                                                                   Params{{"prob", "0.75"}, {"method", "1"}});filter) {
+        PCXYZPtr output(new PCXYZ);
+        filter->filter(input, output);
+        display_filter_result(filter->class_name(), input, output);
+    }
 }
 
 TEST(pc_utils, filter_from_yaml) {

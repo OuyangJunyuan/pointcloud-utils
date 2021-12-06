@@ -13,9 +13,9 @@ define( CropAABoxFilter         )           \
 define( CropOBoxFilter          )           \
 define( RegionOfInterestFilter  )           \
 define( ApproximateVoxelFilter  )           \
-define( SelfFilter              )
-
-
+define( SelfFilter              )           \
+define( MaxPointCount           )           \
+define( RandomSampling          )
 namespace pc_utils {
 template<class PointT>
 class CloudFilter {

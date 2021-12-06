@@ -3,12 +3,13 @@
 //
 #include "pc_utils/filter/cloud_filter.h"
 
+#include <random>
 #include <yaml-cpp/yaml.h>
 #include <pcl/filters/crop_box.h>
 #include <pcl/filters/approximate_voxel_grid.h>
 
 #include "pc_utils/common/factory.h"
-#include <pc_utils/common/parameter.h>
+#include "pc_utils/common/parameter.h"
 #include "pc_utils/bound/box_extract.h"
 
 #define PC_UTILS_CLASS_BASE_TYPE                CloudFilter
@@ -263,6 +264,104 @@ public:
         voxel_grid.setLeafSize(leaf_x, leaf_y, leaf_z);
         voxel_grid.setInputCloud(input);
         voxel_grid.filter(*output);
+    }
+};
+
+/**
+ * @breif: 随机采取固定个数的点
+ * @tparam PointT
+ */
+template<class PointT>
+class MaxPointCount final : PC_UTILS_BASE_LIST(MaxPointCount) {
+#define PC_UTILS_MEMBER_VARIABLE        \
+define(size_t, count,)
+
+#define PC_UTILS_CLASS                  \
+MaxPointCount
+
+#include "detail/member_define.h"
+
+public:
+    void filter(const typename PC<PointT>::Ptr &input, typename PC<PointT>::Ptr &output, void *data) override {
+        typename pcl::PointCloud<PointT>::Ptr out(new pcl::PointCloud<PointT>(*input));
+        const size_t N{static_cast<size_t>(input->size() - 1)};
+        if (count <= N) {
+            size_t seed = 0;
+            if (data) {
+                seed = *(size_t *) data;
+            }
+            std::minstd_rand randomNumberGenerator(static_cast<std::uint_fast32_t>(seed));
+            std::uniform_real_distribution<float> distribution{0, 1};
+
+            for (size_t j{0u}; j < count; ++j) {
+                //Get a random index in [j; N]
+                const size_t index{j + static_cast<size_t>((N - j) * distribution(randomNumberGenerator))};
+
+                //Switch columns j and index
+                swap((*out)[j], (*out)[index]);
+            }
+            //Resize the cloud
+            out->resize(count);
+        }
+        output = out;
+    }
+};
+
+
+/**
+ * @brief: dropout some point with rate <prob>
+ * @tparam PointT
+ */
+template<class PointT>
+class RandomSampling final : PC_UTILS_BASE_LIST(RandomSampling) {
+#define PC_UTILS_MEMBER_VARIABLE        \
+define(float, prob,{0.5f})              \
+define(int, method,{0})
+
+#define PC_UTILS_CLASS                  \
+RandomSampling
+
+#include "detail/member_define.h"
+
+    Eigen::VectorXf sampleRandomIndices(const size_t nbPoints) {
+        std::random_device randomDevice;
+        std::minstd_rand randomNumberGenerator(randomDevice());
+
+        switch (method) {
+            default:    // Direct RNG.
+            {
+                const float randomNumberRange{
+                        static_cast<float>(randomNumberGenerator.max() - randomNumberGenerator.min())};
+                return Eigen::VectorXf::NullaryExpr(nbPoints, [&](float) {
+                    return static_cast<float>(randomNumberGenerator() / randomNumberRange);
+                });
+            }
+            case 1:        // Uniform distribution.
+            {
+                std::uniform_real_distribution<float> distribution(0, 1);
+                return Eigen::VectorXf::NullaryExpr(nbPoints,
+                                                    [&](float) { return distribution(randomNumberGenerator); });
+            }
+        }
+    }
+
+public:
+    void filter(const typename PC<PointT>::Ptr &input, typename PC<PointT>::Ptr &output, void *data) override {
+        const size_t nbPointsIn = input->size();
+        const size_t nbPointsOut = nbPointsIn * prob;
+        typename pcl::PointCloud<PointT>::Ptr out(new pcl::PointCloud<PointT>(*input));
+
+
+        const Eigen::VectorXf randomNumbers{sampleRandomIndices(nbPointsIn)};
+        size_t j{0u};
+        for (size_t i{0u}; i < nbPointsIn && j <= nbPointsOut; ++i) {
+            if (randomNumbers(i) < prob) {
+                (*out)[j] = (*out)[i];
+                ++j;
+            }
+        }
+        out->resize(j);
+        output = out;
     }
 };
 
