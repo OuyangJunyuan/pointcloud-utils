@@ -1,0 +1,46 @@
+CloudFilter:
+  PassThroughFilter: { max_x: 5, max_y: 5, max_z: 5,negative: false }
+  CropAABoxFilter: { min_x: -5, min_y: -5, min_z: -5, max_x: 5, max_y: 5, max_z: 5,negative: false }
+  RegionOfInterestFilter: { min_r: 1, max_r: 5,negative: false }
+  CropOBoxFilter: { pose: [ 0, 0, 0, 1, 0, 0, 0 ], dxyz: [15, 15, 15], negative: false}
+  ApproximateVoxelFilter: { leaf_x: 1, leaf_y: 1, leaf_z: 1 }
+
+GroundEstimate:
+  PatchWorkEstimate:
+    sensor_height: 0.5                                # 雷达距离地面的安装高度
+    max_range: 50.0                                   # 最大距离
+    min_range: 0                                      # 最小距离
+    # 同心栅格划分
+    num_zones: 4                                      # 将点云划分为 num_zones 个圆环区域
+    num_rings_each_zone: [ 2, 4, 4, 4 ]               # 每个圆环区域划分 num_rings_each_zone 个小圆环
+    num_sectors_each_zone: [ 16, 32, 54, 32 ]         # 将小圆环切割成 num_sectors_each_zone 个扇区
+    # 以下涉及初始地面种子点选取
+    adaptive_seed_selection_margin: -1.1              # 第0个zone只对z高于 adaptive_seed_... * sensor_height 点选择lpr
+    num_lpr: 20                                       # 初始种子点选取本扇区不大于num_lpr个z最低的点做lpr
+    th_seeds: 0.4                                     # 扇区内低于lpr点平均高度 + th_seeds 为地面种子
+    # 迭代地面拟合
+    num_iter: 6                                       # 获取种子(或上一迭代地面)点后，对地面店进行num_iter次迭代拟合平面
+    th_dist: 0.2                                      # 低于 th_dist + 平面模型中心点 作为地面点进行下一次迭代
+    # 以下涉及对每个扇区地面点提取之后的后处理
+    num_min_pts: 2                                    # 点云个数低于 num_min_pts 的扇区被认为没有地面存在
+    uprightness_thr: 0.707                            # 地面法向量与xoy平面夹角，用于过滤垂直度较小 的(地)平面
+    num_rings_of_interest: 4                          # 只对靠近雷达的 num_rings_of_interest 个ring进行后处理
+    # 高程阈值过滤后处理，地面平均z高于阈值的进行 平坦度阈值过滤
+    elevation_thr: [ -0, -0, -0, -0 ]
+    # 平坦度阈值过滤后处理，大于阈值的地面点将被抛弃
+    flatness_thr: [ 0.0, 0.000125, 0.000185, 0.000185 ]
+
+  RansacEstimate:
+    max_iter_num: 1000
+    max_dis: 0.1
+
+Cluster:
+  EuclideanCluster:
+    min_dis: 0.5
+    min_points: 1
+
+  CurvedVoxelCluster:
+    deltaA: 2
+    deltaR: 0.2
+    deltaP: 1
+    min_points: 1

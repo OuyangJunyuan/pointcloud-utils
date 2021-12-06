@@ -1,0 +1,2 @@
+/usr/bin/ar qc libpc_utils.a CMakeFiles/pc_utils.dir/src/box_extract.cpp.o CMakeFiles/pc_utils.dir/src/filter/cloud_filter.cpp.o CMakeFiles/pc_utils.dir/src/common.cpp.o
+/usr/bin/ranlib libpc_utils.a
