@@ -61,7 +61,7 @@ using namespace pc_utils;
 
 template<class T>
 void display_filter_result(const std::string &name, T &&input, T &&output) {
-    std::cout << "[" + name + "]: " <<  input->size() << " pts -> " << output->size() <<" pts"<< std::endl;
+    std::cout << "[" + name + "]: " << input->size() << " pts -> " << output->size() << " pts" << std::endl;
     pcl::visualization::PCLVisualizer viewer(name);
     viewer.resetCamera();
     viewer.setBackgroundColor(0.1, 0.1, 0.1);
@@ -80,30 +80,26 @@ TEST(pc_utils, filter_from_params) {
 
     PCXYZPtr input(new PCXYZ);
     pcl::io::loadPCDFile(ROOT_PATH "/resource/000000.pcd", *input);
-    if (auto filter = FilterFactoryParams::BuildT<std::shared_ptr>(pc_utils::ns("PassThroughFilter"),
-                                                                   Params
-                                                                           {
-                                                                                   {"max_x",    5.0f},
-                                                                                   {"max_y",    5.0f},
-                                                                                   {"max_z",    5.0f},
-                                                                                   {"negative", false}
-                                                                           });filter) {
+    if (auto filter = FilterFactoryParams::BuildT(pc_utils::ns("PassThroughFilter"),
+                                                  Params{
+                                                          {"max_x",    5.0f},
+                                                          {"max_y",    5.0f},
+                                                          {"max_z",    5.0f},
+                                                          {"negative", false}});filter) {
         PCXYZPtr output(new PCXYZ);
         filter->filter(input, output);
         display_filter_result(filter->class_name(), input, output);
     }
 
-    if (auto filter = FilterFactoryParams::BuildT<std::shared_ptr>(pc_utils::ns("CropAABoxFilter"),
-                                                                   Params
-                                                                           {
-                                                                                   {"max_x",    "inf"},
-                                                                                   {"min_x",    "-10.0"},
-                                                                                   {"max_y",    0.0f},
-                                                                                   {"min_y",    -10.0f},
-                                                                                   {"max_z",    0.0f},
-                                                                                   {"min_z",    -10.0f},
-                                                                                   {"negative", false}
-                                                                           });filter) {
+    if (auto filter = FilterFactoryParams::BuildT(pc_utils::ns("CropAABoxFilter"),
+                                                  Params{
+                                                          {"max_x",    "inf"},
+                                                          {"min_x",    "-10.0"},
+                                                          {"max_y",    0.0f},
+                                                          {"min_y",    -10.0f},
+                                                          {"max_z",    0.0f},
+                                                          {"min_z",    -10.0f},
+                                                          {"negative", false}});filter) {
         PCXYZPtr output(new PCXYZ);
         filter->filter(input, output);
         display_filter_result(filter->class_name(), input, output);
@@ -112,60 +108,57 @@ TEST(pc_utils, filter_from_params) {
 
     auto pose = Eigen::AngleAxisf(M_PI_4, Eigen::Vector3f::UnitZ()) * Eigen::Isometry3f::Identity();
     auto dxyz = Eigen::Vector3f{15, 15, 15};
-    if (auto filter = FilterFactoryParams::BuildT<std::shared_ptr>(pc_utils::ns("CropOBoxFilter"),
-                                                                   Params
-                                                                           {
-                                                                                   {"pose",     pose},
-                                                                                   {"dxyz",     dxyz},
-                                                                                   {"negative", false}
-                                                                           });filter) {
+    if (auto filter = FilterFactoryParams::BuildT(pc_utils::ns("CropOBoxFilter"),
+                                                  Params{
+                                                          {"pose",     pose},
+                                                          {"dxyz",     dxyz},
+                                                          {"negative", false}
+                                                  });filter) {
         PCXYZPtr output(new PCXYZ);
         filter->filter(input, output);
         display_filter_result(filter->class_name(), input, output);
     }
 
-    if (auto filter = FilterFactoryParams::BuildT<std::shared_ptr>(pc_utils::ns("RegionOfInterestFilter"),
-                                                                   Params
-                                                                           {
-                                                                                   {"max_r",    10.0f},
-                                                                                   {"min_r",    "0.0"},
-                                                                                   {"negative", true}
-                                                                           });filter) {
+    if (auto filter = FilterFactoryParams::BuildT(pc_utils::ns("RegionOfInterestFilter"),
+                                                  Params{
+                                                          {"max_r",    10.0f},
+                                                          {"min_r",    "0.0"},
+                                                          {"negative", true}
+                                                  });filter) {
         PCXYZPtr output(new PCXYZ);
         filter->filter(input, output);
         display_filter_result(filter->class_name(), input, output);
     }
 
-    if (auto filter = FilterFactoryParams::BuildT<std::shared_ptr>(pc_utils::ns("ApproximateVoxelFilter"),
-                                                                   Params
-                                                                           {
-                                                                                   {"leaf_x", "1.0"},
-                                                                                   {"leaf_y", "1.0"},
-                                                                                   {"leaf_z", "1.0"}
-                                                                           });filter) {
-        PCXYZPtr output(new PCXYZ);
-        filter->filter(input, output);
-        display_filter_result(filter->class_name(), input, output);
-    }
-
-
-    if (auto filter = FilterFactoryParams::BuildT<std::shared_ptr>(pc_utils::ns("MaxPointCount"),
-                                                                   Params{{"count", "10000"}});filter) {
+    if (auto filter = FilterFactoryParams::BuildT(pc_utils::ns("ApproximateVoxelFilter"),
+                                                  Params{
+                                                          {"leaf_x", "1.0"},
+                                                          {"leaf_y", "1.0"},
+                                                          {"leaf_z", "1.0"}
+                                                  });filter) {
         PCXYZPtr output(new PCXYZ);
         filter->filter(input, output);
         display_filter_result(filter->class_name(), input, output);
     }
 
 
-    if (auto filter = FilterFactoryParams::BuildT<std::shared_ptr>(pc_utils::ns("RandomSampling"),
-                                                                   Params{{"prob",   "0.25"},
-                                                                          {"method", "1"}});filter) {
+    if (auto filter = FilterFactoryParams::BuildT(pc_utils::ns("MaxPointCount"),
+                                                  Params{{"count", "10000"}});filter) {
         PCXYZPtr output(new PCXYZ);
         filter->filter(input, output);
         display_filter_result(filter->class_name(), input, output);
     }
 
-    if (auto filter = FilterFactoryParams::BuildT<std::shared_ptr>(pc_utils::ns("RemoveNaN"), Params{});filter) {
+
+    if (auto filter = FilterFactoryParams::BuildT(pc_utils::ns("RandomSampling"),
+                                                  Params{{"prob",   "0.25"},
+                                                         {"method", "1"}});filter) {
+        PCXYZPtr output(new PCXYZ);
+        filter->filter(input, output);
+        display_filter_result(filter->class_name(), input, output);
+    }
+
+    if (auto filter = FilterFactoryParams::BuildT(pc_utils::ns("RemoveNaN"), Params{});filter) {
         PCXYZPtr output(new PCXYZ);
         filter->filter(input, output);
         display_filter_result(filter->class_name(), input, output);
