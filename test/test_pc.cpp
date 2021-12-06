@@ -61,7 +61,7 @@ using namespace pc_utils;
 
 template<class T>
 void display_filter_result(const std::string &name, T &&input, T &&output) {
-    std::cout << "before: " << input->size() << ", after: " << output->size() << std::endl;
+    std::cout << "[" + name + "]: " <<  input->size() << " pts -> " << output->size() <<" pts"<< std::endl;
     pcl::visualization::PCLVisualizer viewer(name);
     viewer.resetCamera();
     viewer.setBackgroundColor(0.1, 0.1, 0.1);
@@ -150,7 +150,7 @@ TEST(pc_utils, filter_from_params) {
 
 
     if (auto filter = FilterFactoryParams::BuildT<std::shared_ptr>(pc_utils::ns("MaxPointCount"),
-                                                                   Params{{"count", "1000"}});filter) {
+                                                                   Params{{"count", "10000"}});filter) {
         PCXYZPtr output(new PCXYZ);
         filter->filter(input, output);
         display_filter_result(filter->class_name(), input, output);
@@ -158,7 +158,14 @@ TEST(pc_utils, filter_from_params) {
 
 
     if (auto filter = FilterFactoryParams::BuildT<std::shared_ptr>(pc_utils::ns("RandomSampling"),
-                                                                   Params{{"prob", "0.75"}, {"method", "1"}});filter) {
+                                                                   Params{{"prob",   "0.25"},
+                                                                          {"method", "1"}});filter) {
+        PCXYZPtr output(new PCXYZ);
+        filter->filter(input, output);
+        display_filter_result(filter->class_name(), input, output);
+    }
+
+    if (auto filter = FilterFactoryParams::BuildT<std::shared_ptr>(pc_utils::ns("RemoveNaN"), Params{});filter) {
         PCXYZPtr output(new PCXYZ);
         filter->filter(input, output);
         display_filter_result(filter->class_name(), input, output);

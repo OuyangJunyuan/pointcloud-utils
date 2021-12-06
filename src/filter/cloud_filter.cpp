@@ -365,6 +365,28 @@ public:
     }
 };
 
+
+/**
+ * @brief remove NaN point in cloud
+ * @tparam PointT
+ */
+template<class PointT>
+class RemoveNaN final : PC_UTILS_BASE_LIST(RemoveNaN) {
+#define PC_UTILS_MEMBER_VARIABLE
+
+#define PC_UTILS_CLASS                  \
+RemoveNaN
+
+#include "detail/member_define.h"
+
+public:
+    void filter(const typename PC<PointT>::Ptr &input, typename PC<PointT>::Ptr &output, void *data) override {
+        std::vector<int> indices;
+        pcl::removeNaNFromPointCloud(*input, *output, indices);
+    }
+};
+
+
 /**
  * @brief 滤除自身点云
  * @tparam PointT point type

@@ -15,7 +15,9 @@ define( RegionOfInterestFilter  )           \
 define( ApproximateVoxelFilter  )           \
 define( SelfFilter              )           \
 define( MaxPointCount           )           \
-define( RandomSampling          )
+define( RandomSampling          )           \
+define( RemoveNaN               )
+
 namespace pc_utils {
 template<class PointT>
 class CloudFilter {
