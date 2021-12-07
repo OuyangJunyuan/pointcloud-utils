@@ -16,6 +16,7 @@
 #define PC_UTILS_CLASS_CONSTRUCTION             (const YAML::Node &)(const Params &)
 
 using namespace std;
+
 namespace YAML {
 template<>
 struct convert<Eigen::Isometry3f> {
@@ -65,7 +66,6 @@ struct convert<Eigen::Vector3f> {
     }
 };
 }
-
 
 namespace pc_utils {
 /**
@@ -272,12 +272,12 @@ public:
  * @tparam PointT
  */
 template<class PointT>
-class MaxPointCount final : PC_UTILS_BASE_LIST(MaxPointCount) {
+class MaxPointCountFilter final : PC_UTILS_BASE_LIST(MaxPointCountFilter) {
 #define PC_UTILS_MEMBER_VARIABLE        \
 define(size_t, count,)
 
 #define PC_UTILS_CLASS                  \
-MaxPointCount
+MaxPointCountFilter
 
 #include "detail/member_define.h"
 
@@ -313,13 +313,13 @@ public:
  * @tparam PointT
  */
 template<class PointT>
-class RandomSampling final : PC_UTILS_BASE_LIST(RandomSampling) {
+class RandomSamplingFilter final : PC_UTILS_BASE_LIST(RandomSamplingFilter) {
 #define PC_UTILS_MEMBER_VARIABLE        \
 define(float, prob,{0.5f})              \
 define(int, method,{0})
 
 #define PC_UTILS_CLASS                  \
-RandomSampling
+RandomSamplingFilter
 
 #include "detail/member_define.h"
 
@@ -371,11 +371,11 @@ public:
  * @tparam PointT
  */
 template<class PointT>
-class RemoveNaN final : PC_UTILS_BASE_LIST(RemoveNaN) {
+class RemoveNaNFilter final : PC_UTILS_BASE_LIST(RemoveNaNFilter) {
 #define PC_UTILS_MEMBER_VARIABLE
 
 #define PC_UTILS_CLASS                  \
-RemoveNaN
+RemoveNaNFilter
 
 #include "detail/member_define.h"
 
@@ -452,6 +452,41 @@ public:
     }
 };
 
+
+/**
+ * apply filter chain against point cloud
+ * @tparam PointT
+ */
+template<class PointT>
+class Filters final : PC_UTILS_BASE_LIST(Filters) {
+#define PC_UTILS_CLASS  Filters
+private:
+    std::vector<std::shared_ptr<CloudFilter<PointT>>> filters;
+
+public:
+    explicit Filters(const YAML::Node &config) {
+        using FilterFromYaml = Factory<pc_utils::CloudFilter<PointT>, const YAML::Node &>;
+        for (auto moduleIt = config.begin(); moduleIt != config.end(); ++moduleIt) {
+            const auto &module = *moduleIt;
+            std::string name{module.begin()->first.as<std::string>()};
+
+            filters.template emplace_back(FilterFromYaml::BuildT(pc_utils::ns(name), module.begin()->second));
+        }
+    }
+    explicit Filters(const Params & params){
+        throw std::invalid_argument("this interface is no arrowed");
+    }
+
+    void filter(const typename PC<PointT>::Ptr &input, typename PC<PointT>::Ptr &output, void *data) override {
+        typename pcl::PointCloud<PointT>::Ptr out(new pcl::PointCloud<PointT>(*input));
+        for (auto &it: filters) {
+            it->filter(out, out);
+        }
+        output = out;
+    }
+
+#include "detail/others_define.h"
+};
 
 }   // namespace pc_utils
 

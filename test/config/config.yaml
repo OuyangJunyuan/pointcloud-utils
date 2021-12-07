@@ -2,8 +2,18 @@ CloudFilter:
   PassThroughFilter: { max_x: 5, max_y: 5, max_z: 5,negative: false }
   CropAABoxFilter: { min_x: -5, min_y: -5, min_z: -5, max_x: 5, max_y: 5, max_z: 5,negative: false }
   RegionOfInterestFilter: { min_r: 1, max_r: 5,negative: false }
-  CropOBoxFilter: { pose: [ 0, 0, 0, 1, 0, 0, 0 ], dxyz: [15, 15, 15], negative: false}
+  CropOBoxFilter: { pose: [ 0, 0, 0, 1, 0, 0, 0 ], dxyz: [ 15, 15, 15 ], negative: false }
   ApproximateVoxelFilter: { leaf_x: 1, leaf_y: 1, leaf_z: 1 }
+
+  Chain:
+    - RemoveNaNFilter: { }
+    - RandomSamplingFilter: { prob: 0.75, method: 0 }
+    - PassThroughFilter: { max_x: 25, max_y: 25, max_z: 10, negative: false }
+    - CropAABoxFilter: { min_x: -15, min_y: -15, min_z: -5, max_x: 15, max_y: 15, max_z: 5,negative: false }
+    - CropOBoxFilter: { pose: [ 0, 0, 0, 0, 0, 0.78 ], dxyz: [ 30, 30, 30 ], negative: false }
+    - RegionOfInterestFilter: { min_r: 7, max_r: 10, negative: true }
+    - ApproximateVoxelFilter: { leaf_x: 0.1, leaf_y: 0.1, leaf_z: 0.1 }
+    - MaxPointCountFilter: { count: 10000 }
 
 GroundEstimate:
   PatchWorkEstimate:

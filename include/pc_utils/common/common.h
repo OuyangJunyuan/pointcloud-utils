@@ -6,7 +6,8 @@
 #define SRC_COMMON_H
 
 #include "utils.h"
-namespace pc_utils{
+
+namespace pc_utils {
 double inline to_rad(double degree) { return degree / 180 * M_PI; }
 
 Eigen::Isometry3f inline fromXYZRPY(const Eigen::Vector3f &xyz, const Eigen::Vector3f &rpy) {
@@ -24,6 +25,7 @@ Eigen::Isometry3f inline fromXYZRPY(float x, float y, float z, float r, float p,
     return fromXYZRPY(Eigen::Vector3f(x, y, z), Eigen::Vector3f(r, p, yaw));
 }
 }
+
 
 
 

@@ -19,6 +19,24 @@
 //#include <pc_utils/seg/ground_estimate.h>
 //#include <pc_utils/seg/cluster.h>
 
+using namespace pc_utils;
+
+template<class T>
+void display_filter_result(const std::string &name, T &&input, T &&output) {
+    std::cout << "[" + name + "]: " << input->size() << " pts -> " << output->size() << " pts" << std::endl;
+    pcl::visualization::PCLVisualizer viewer(name);
+    viewer.resetCamera();
+    viewer.setBackgroundColor(0.1, 0.1, 0.1);
+    viewer.addCoordinateSystem();
+    viewer.addPointCloud(input, "input");
+    pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> output_color(input, 0, 255, 0);
+    viewer.addPointCloud(output, output_color, "output");
+    while (not viewer.wasStopped()) {
+        viewer.spinOnce();
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
+    }
+}
+
 TEST(pc_utils, parameters) {
     struct TestParam {
         TestParam(const Params &params) {
@@ -42,37 +60,15 @@ TEST(pc_utils, parameters) {
             });
 }
 
-using namespace pc_utils;
-
-//TEST(pc_utils, boundingbox3d) {
-//    using BoundFactory = Factory<pc_utils::BoundingExtract<PXYZ>>;
-//    if (auto box_extractor = BoundFactory::BuildT<std::shared_ptr>("pc_utils::BoundingBox3DExtract");
-//            box_extractor) {
-//
-//        PCXYZPtr points(new PCXYZ);
-//        points->push_back({0, 0, 0});
-//        points->push_back({10, 10, 0});
-//
-//        BoundingBox box;
-//        box_extractor->extract(points, box);
-//        std::cout << box.pose.translation().transpose() << ", " << box.dxyz.transpose() << std::endl;
-//    }
-//}
-
-template<class T>
-void display_filter_result(const std::string &name, T &&input, T &&output) {
-    std::cout << "[" + name + "]: " << input->size() << " pts -> " << output->size() << " pts" << std::endl;
-    pcl::visualization::PCLVisualizer viewer(name);
-    viewer.resetCamera();
-    viewer.setBackgroundColor(0.1, 0.1, 0.1);
-    viewer.addCoordinateSystem();
-    viewer.addPointCloud(input, "input");
-    pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> output_color(input, 0, 255, 0);
-    viewer.addPointCloud(output, output_color, "output");
-    while (not viewer.wasStopped()) {
-        viewer.spinOnce();
-        boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
-    }
+TEST(pc_utils, filter_chain) {
+    using FilterFromYaml = Factory<pc_utils::CloudFilter<PXYZ>, const YAML::Node &>;
+    PCXYZPtr input(new PCXYZ);
+    pcl::io::loadPCDFile(ROOT_PATH "/resource/000000.pcd", *input);
+    YAML::Node config = YAML::LoadFile(ROOT_PATH  "/config/config.yaml")["CloudFilter"]["Chain"];
+    auto filters = FilterFromYaml::BuildT(pc_utils::ns("Filters"), config);
+    PCXYZPtr output(new PCXYZ);
+    filters->filter(input, output);
+    display_filter_result(filters->class_name(), input, output);
 }
 
 TEST(pc_utils, filter_from_params) {
@@ -142,7 +138,7 @@ TEST(pc_utils, filter_from_params) {
     }
 
 
-    if (auto filter = FilterFactoryParams::BuildT(pc_utils::ns("MaxPointCount"),
+    if (auto filter = FilterFactoryParams::BuildT(pc_utils::ns("MaxPointCountFilter"),
                                                   Params{{"count", "10000"}});filter) {
         PCXYZPtr output(new PCXYZ);
         filter->filter(input, output);
@@ -150,7 +146,7 @@ TEST(pc_utils, filter_from_params) {
     }
 
 
-    if (auto filter = FilterFactoryParams::BuildT(pc_utils::ns("RandomSampling"),
+    if (auto filter = FilterFactoryParams::BuildT(pc_utils::ns("RandomSamplingFilter"),
                                                   Params{{"prob",   "0.25"},
                                                          {"method", "1"}});filter) {
         PCXYZPtr output(new PCXYZ);
@@ -158,68 +154,28 @@ TEST(pc_utils, filter_from_params) {
         display_filter_result(filter->class_name(), input, output);
     }
 
-    if (auto filter = FilterFactoryParams::BuildT(pc_utils::ns("RemoveNaN"), Params{});filter) {
+    if (auto filter = FilterFactoryParams::BuildT(pc_utils::ns("RemoveNaNFilter"), Params{});filter) {
         PCXYZPtr output(new PCXYZ);
         filter->filter(input, output);
         display_filter_result(filter->class_name(), input, output);
     }
 }
 
-TEST(pc_utils, filter_from_yaml) {
-    auto config = YAML::LoadFile(ROOT_PATH  "/config/config.yaml")["CloudFilter"];
-    using FilterFactoryYaml = Factory<pc_utils::CloudFilter<PXYZ>, const YAML::Node &>;
 
-    if (auto filter = FilterFactoryYaml::BuildT<std::shared_ptr>(pc_utils::ns("PassThroughFilter"),
-                                                                 config["PassThroughFilter"]);filter) {
-        PCXYZPtr points(new PCXYZ);
-        points->push_back({10, 10, 10});
-        points->push_back({0, 0, 0});
-
-        filter->filter(points, points);
-        std::cout << points->size() << std::endl;
-    }
-
-    if (auto filter = FilterFactoryYaml::BuildT<std::shared_ptr>("pc_utils::CropAABoxFilter",
-                                                                 config["CropAABoxFilter"]);filter) {
-        PCXYZPtr points(new PCXYZ);
-        points->push_back({10, 10, 10});
-        points->push_back({0, 0, 0});
-
-        filter->filter(points, points);
-        std::cout << points->size() << std::endl;
-    }
-
-    if (auto filter = FilterFactoryYaml::BuildT<std::shared_ptr>("pc_utils::CropOBoxFilter",
-                                                                 config["CropOBoxFilter"]);filter) {
-        PCXYZPtr points(new PCXYZ);
-        points->push_back({10, 10, 10});
-        points->push_back({0, 0, 0});
-
-        filter->filter(points, points);
-        std::cout << points->size() << std::endl;
-    }
-
-    if (auto filter = FilterFactoryYaml::BuildT<std::shared_ptr>("pc_utils::RegionOfInterestFilter",
-                                                                 config["RegionOfInterestFilter"]);filter) {
-        PCXYZPtr points(new PCXYZ);
-        points->push_back({10, 10, 10});
-        points->push_back({0, 0, 0});
-
-        filter->filter(points, points);
-        std::cout << points->size() << std::endl;
-    }
-
-    if (auto filter = FilterFactoryYaml::BuildT<std::shared_ptr>("pc_utils::ApproximateVoxelFilter",
-                                                                 config["ApproximateVoxelFilter"]);filter) {
-        PCXYZPtr points(new PCXYZ);
-        points->push_back({10, 10, 10});
-        points->push_back({0, 0, 0});
-
-        filter->filter(points, points);
-        std::cout << points->size() << std::endl;
-    }
-}
-
+//TEST(pc_utils, boundingbox3d) {
+//    using BoundFactory = Factory<pc_utils::BoundingExtract<PXYZ>>;
+//    if (auto box_extractor = BoundFactory::BuildT<std::shared_ptr>("pc_utils::BoundingBox3DExtract");
+//            box_extractor) {
+//
+//        PCXYZPtr points(new PCXYZ);
+//        points->push_back({0, 0, 0});
+//        points->push_back({10, 10, 0});
+//
+//        BoundingBox box;
+//        box_extractor->extract(points, box);
+//        std::cout << box.pose.translation().transpose() << ", " << box.dxyz.transpose() << std::endl;
+//    }
+//}
 
 //TEST(pc_utils, ground_seg) {
 //    auto config = YAML::LoadFile(CONFIG_PATH)["GroundEstimate"];

@@ -14,9 +14,10 @@ define( CropOBoxFilter          )           \
 define( RegionOfInterestFilter  )           \
 define( ApproximateVoxelFilter  )           \
 define( SelfFilter              )           \
-define( MaxPointCount           )           \
-define( RandomSampling          )           \
-define( RemoveNaN               )
+define( MaxPointCountFilter     )           \
+define( RandomSamplingFilter    )           \
+define( RemoveNaNFilter         )           \
+define( Filters                 )
 
 namespace pc_utils {
 template<class PointT>
