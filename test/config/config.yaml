@@ -15,8 +15,8 @@ CloudFilter:
     - ApproximateVoxelFilter: { leaf_x: 0.1, leaf_y: 0.1, leaf_z: 0.1 }
     - MaxPointCountFilter: { count: 10000 }
 
-GroundEstimate:
-  PatchWorkEstimate:
+GroundEstimator:
+  PatchWorkGroundEstimator:
     sensor_height: 0.5                                # 雷达距离地面的安装高度
     max_range: 50.0                                   # 最大距离
     min_range: 0                                      # 最小距离
@@ -40,7 +40,7 @@ GroundEstimate:
     # 平坦度阈值过滤后处理，大于阈值的地面点将被抛弃
     flatness_thr: [ 0.0, 0.000125, 0.000185, 0.000185 ]
 
-  RansacEstimate:
+  RansacGroundEstimator:
     max_iter_num: 1000
     max_dis: 0.1
 

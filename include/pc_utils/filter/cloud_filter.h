@@ -28,8 +28,11 @@ public:
 
     virtual std::string class_name() = 0;
 };  // namespace pc_utils
+
+
 }
 
-PC_UTILS_LINK_HELPER_HEADER(filter)
+
+PC_UTILS_LINK_HELPER_HEADER(CloudFilter)
 
 #endif //PC_UTILS_FILTER_H

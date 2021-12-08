@@ -49,6 +49,13 @@ BOOST_PP_SEQ_FOR_EACH(PC_UTILS_TEMPLATE_SPECIALIZATIONS_ONE_TYPE, CLASS, PC_UTIL
 #define PC_UTILS_CLASS_MEMBER_NAME(pack) PC_UTILS_CLASS_MEMBER_1 pack
 #define PC_UTILS_CLASS_MEMBER_VALUE(pack) PC_UTILS_CLASS_MEMBER_2 pack
 
+/**
+ @example   #undef PC_UTILS_CLASS_MEMBER_LIST
+ @example   #define PC_UTILS_CLASS_MEMBER_LIST      \
+ @example   ((float, min_dis   , ))                 \
+ @example   ((float, min_points, ))
+ @example   PC_UTILS_DEF_CLASS_MEMBER
+ */
 /* define class member variable from arg list*/
 #define PC_UTILS_DEF_CLASS_MEMBER_IMPL(_, __, elem) \
 PC_UTILS_CLASS_MEMBER_TYPE(elem)  PC_UTILS_CLASS_MEMBER_NAME(elem){PC_UTILS_CLASS_MEMBER_VALUE(elem)};
@@ -107,10 +114,16 @@ namespace pc_utils::_link {bool link_##name = true;}
 
 
 
-/***
+/**
  * class pre-declare
  */
 namespace pc_utils {
+
+class BoundingBox;
+
+template<class PointT>
+class BoundingExtractor;
+
 template<class>
 class CloudFilter;
 
@@ -118,9 +131,8 @@ template<class>
 class Cluster;
 
 template<class>
-class GroundEstimate;
+class GroundEstimator;
 
-class BoundingBox;
 }// namespace pc_utils
 
 

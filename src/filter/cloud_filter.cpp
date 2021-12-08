@@ -8,12 +8,13 @@
 #include <pcl/filters/crop_box.h>
 #include <pcl/filters/approximate_voxel_grid.h>
 
-#include "pc_utils/common/factory.h"
+#include "pc_utils/common/detail/factory.h"
 #include "pc_utils/common/parameter.h"
 #include "pc_utils/bound/box_extract.h"
 
 #define PC_UTILS_CLASS_BASE_TYPE                CloudFilter
 #define PC_UTILS_CLASS_CONSTRUCTION             (const YAML::Node &)(const Params &)
+#define PC_UTILS_TEMPLATE_SPECIALIZATION_LIST   PC_UTILS_FILTER_TYPE
 
 using namespace std;
 
@@ -473,7 +474,8 @@ public:
             filters.template emplace_back(FilterFromYaml::BuildT(pc_utils::ns(name), module.begin()->second));
         }
     }
-    explicit Filters(const Params & params){
+
+    explicit Filters(const Params &params) {
         throw std::invalid_argument("this interface is no arrowed");
     }
 
@@ -488,6 +490,17 @@ public:
 #include "detail/others_define.h"
 };
 
+
 }   // namespace pc_utils
+
+
+
+
+
+
+
+
+
+
 
 #include "detail/template_specialization.h"

@@ -4,7 +4,7 @@
 #include "type_util.h"
 #include <memory>
 #include <unordered_map>
-
+#define BASE_UTILS_VERBOSE
 /***
  * @brief Factory class definition
  * @example
