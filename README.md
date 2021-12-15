@@ -2,13 +2,47 @@
 
 A package for convenient pointcloud processing, implemented by abstract factory pattern. And it's supported to build from a variety of ways
 
-# install
+# Install
 
 cmake install has not been implemented yet, only as cmake subdirectory was supported.
 
 note: c++17 standard needed.
 
-# simple example
+# Introduction
+
+* Filter:
+  * PassThroughFilter 
+  * CropAABoxFilter[pcl wrapper]
+  * CropOBoxFilter[pcl wrapper]
+  * RegionOfInterestFilter 
+  * ApproximateVoxelFilter[pcl wrapper]
+  * SelfFilter 
+  * MaxPointCountFilter 
+  * RandomSamplingFilter 
+  * RemoveNaNFilter[pcl wrapper]
+  * Filters
+* Cluster:
+  * EuclideanCluster[pcl wrapper]
+  * CurvedVoxelCluster[[IROS2019: Curved-Voxel Clustering for Accurate Segmentation of 3D LiDAR Point Clouds with Real-Time Performance]](https://ieeexplore.ieee.org/abstract/document/8968026)
+* GroundSegmentation:
+  * RansacGroundEstimator[pcl wrapper]
+  * PatchWorkGroundEstimator[[2021 RAL: Patchwork: Concentric Zone-Based Region-Wise Ground Segmentation With Ground Likelihood Estimation Using a 3D LiDAR Sensor]](https://ieeexplore.ieee.org/abstract/document/9466396)
+* bounding:
+  * bounding box:[PCA]
+
+todo:
+
+* cluster
+  * JCP
+* GroundSegmentation
+  * range-based segmentation
+  * vertical analysis groud remove
+* bounding:
+  * Polygon bounding  
+  * Capsule bounding 
+* ...
+
+# Simple example
 
 usage of all these methods can be found in test cases `test/test_pc.cpp`.
 
