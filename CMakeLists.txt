@@ -11,7 +11,12 @@ find_package(PCL 1.8 COMPONENTS
         surface
         REQUIRED QUIET)
 find_package(yaml-cpp REQUIRED)
+find_package(GFlags REQUIRED)
 
+include_directories(
+        ${YAML_CPP_INCLUDE_DIR}
+        ${PCL_INCLUDE_DIRS}
+)
 
 add_library(pc_utils STATIC
         src/bound/box_extract.cpp
@@ -38,3 +43,4 @@ target_link_libraries(pc_utils
         )
 
 add_subdirectory(test)
+add_subdirectory(tools)
