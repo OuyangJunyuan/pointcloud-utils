@@ -54,3 +54,5 @@ Cluster:
     deltaR: 0.2
     deltaP: 1
     min_points: 1
+    max_azimuth: 30
+    min_azimuth: -30

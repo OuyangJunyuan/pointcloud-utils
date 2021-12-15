@@ -76,13 +76,13 @@ template<typename PointT>
 class CurvedVoxelCluster final : PC_UTILS_BASE_LIST(CurvedVoxelCluster) {
 #define PC_UTILS_CLASS  CurvedVoxelCluster
 
-#define PC_UTILS_MEMBER_VARIABLE                    \
-define(float, deltaA     , {2.0f}               )   \
-define(float, deltaR     , {0.35}               )   \
-define(float, deltaP     , {1.2f}               )   \
-define(int  , min_points , {10}                 )   \
-define(float, max_azimuth, {24.0f* M_PI / 180}  )   \
-define(float, min_azimuth, {-24.0f* M_PI / 180} )
+#define PC_UTILS_MEMBER_VARIABLE        \
+define(float, deltaA     , {2.0f}   )   \
+define(float, deltaR     , {0.35}   )   \
+define(float, deltaP     , {1.2f}   )   \
+define(int  , min_points , {10}     )   \
+define(float, max_azimuth, {24.0f}  )   \
+define(float, min_azimuth, {-24.0f} )
 
 #include "detail/member_define.h"
 
@@ -137,7 +137,7 @@ define(float, min_azimuth, {-24.0f* M_PI / 180} )
         }
         length_ = int((max_range_ - min_range_) / deltaR) + 1;
         width_ = round(360 / deltaP);
-        height_ = int(((max_azimuth - min_azimuth) * 180 / M_PI) / deltaA) + 1;
+        height_ = (max_azimuth - min_azimuth) / deltaA + 1;
     }
 
     void build_hash_table(const std::vector<PointAPR> &vapr, std::unordered_map<int, Voxel> &map_out) {
@@ -146,7 +146,7 @@ define(float, min_azimuth, {-24.0f* M_PI / 180} )
         std::vector<int> pi;
         std::vector<int> ai;
         for (int i = 0; i < vapr.size(); ++i) {
-            int azimuth_index = int(((vapr[i].azimuth - min_azimuth) * 180 / M_PI) / deltaA);
+            int azimuth_index = (vapr[i].azimuth - min_azimuth) / deltaA;
             int polar_index = int(vapr[i].polar_angle * 180 / M_PI / deltaP);
             int range_index = int((vapr[i].range - min_range_) / deltaR);
 
@@ -237,7 +237,7 @@ define(float, min_azimuth, {-24.0f* M_PI / 180} )
 
             if (cluster_indices[i] != -1)
                 continue;
-            int azimuth_index = int((vapr[i].azimuth - min_azimuth) * 180 / M_PI / deltaA);
+            int azimuth_index = (vapr[i].azimuth - min_azimuth) / deltaA;
             int polar_index = int(vapr[i].polar_angle * 180 / M_PI / deltaP);
             int range_index = int((vapr[i].range - min_range_) / deltaR);
             int voxel_index = (polar_index * (length_) + range_index) + azimuth_index * (length_) * (width_);
