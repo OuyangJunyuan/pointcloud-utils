@@ -27,16 +27,14 @@ note: c++17 standard needed.
 * GroundSegmentation:
   * RansacGroundEstimator[pcl wrapper]
   * PatchWorkGroundEstimator[[2021 RAL: Patchwork: Concentric Zone-Based Region-Wise Ground Segmentation With Ground Likelihood Estimation Using a 3D LiDAR Sensor]](https://ieeexplore.ieee.org/abstract/document/9466396)
+  * RingShapedElevationConjunctionMap[[2021 Remote Sensing: Fast Ground Segmentation for 3D LiDAR Point Cloud Based on Jump-Convolution-Process](https://www.mdpi.com/2072-4292/13/16/3239)]
 * bounding:
   * bounding box:[PCA]
 
 todo:
-
-* cluster
-  * JCP
 * GroundSegmentation
   * range-based segmentation
-  * vertical analysis groud remove
+  * CP
 * bounding:
   * Polygon bounding  
   * Capsule bounding 
