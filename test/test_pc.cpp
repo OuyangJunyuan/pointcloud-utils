@@ -5,7 +5,7 @@
 #include <gtest/gtest.h>
 #include <yaml-cpp/yaml.h>
 #include <dbg.h>
-
+#include <chrono>
 #include <pcl/io/pcd_io.h>
 #include <pcl/visualization/pcl_visualizer.h>
 
@@ -17,11 +17,30 @@
 #include <pc_utils/filter/cloud_filter.h>
 
 
-
 using namespace pc_utils;
 
 template<class T>
 void display_filter_result(const std::string &name, T &&input, T &&output);
+
+template<class T>
+void display_ground_seg_result(const std::string &name, T &&input, T &&output);
+
+struct Timer {
+    std::string title;
+    std::chrono::steady_clock::time_point t1;
+
+    Timer(const char *_title) {
+        title = std::string(_title);
+        t1 = std::chrono::steady_clock::now();
+    }
+
+    ~ Timer() {
+        auto t2 = std::chrono::steady_clock::now();
+        std::cout << title << " : " << std::chrono::duration_cast<std::chrono::duration<double>>(t2 - t1).count() * 1000
+                  << " ms\n";
+    };
+};
+
 
 TEST(pc_utils, parameters) {
     struct TestParam {
@@ -164,35 +183,38 @@ TEST(pc_utils, boundingbox3d) {
 
 TEST(pc_utils, ground_seg) {
     auto config = YAML::LoadFile(ROOT_PATH  "/config/config.yaml")["GroundEstimator"];
+    pcl::PointCloud<pcl::PointXYZ>::Ptr
+            points(new pcl::PointCloud<pcl::PointXYZ>),
+            ground(new pcl::PointCloud<pcl::PointXYZ>),
+            non_ground(new pcl::PointCloud<pcl::PointXYZ>);
+    pcl::io::loadPCDFile(ROOT_PATH "/resource/000000.pcd", *points);
     using GroundSegFactory = Factory<pc_utils::GroundEstimator<PXYZ>, const YAML::Node &>;
-
-
-    if (auto filter = GroundSegFactory::BuildT<std::shared_ptr>(pc_utils::ns("PatchWorkGroundEstimator"),
-                                                                config["PatchWorkGroundEstimator"]);filter) {
-        PCXYZPtr points(new PCXYZ), ground(new PCXYZ), no_ground(new PCXYZ);
-
-        points->push_back({10, 10, 10});
-        points->push_back({5, 5, 0});
-        points->push_back({0, 0, 0});
-
-        filter->estimate(points, ground, no_ground);
-        std::cout << points->size() << ", ground: " << ground->size() << ", no_ground: " << no_ground->size()
-                  << std::endl;
-    }
 
     if (auto filter = GroundSegFactory::BuildT<std::shared_ptr>(pc_utils::ns("RansacGroundEstimator"),
                                                                 config["RansacGroundEstimator"]);filter) {
-        PCXYZPtr points(new PCXYZ), ground(new PCXYZ), no_ground(new PCXYZ);
-
-        for (int i = 0; i < 10; i++) {
-            points->push_back({10, 10, 10});
-            points->push_back({5, 5, 0});
-            points->push_back({0, 0, 0});
+        {
+            Timer timer("RansacGroundEstimator");
+            filter->estimate(points, ground, non_ground);
         }
+        display_ground_seg_result("RansacGroundEstimator", points, ground);
+    }
 
-        filter->estimate(points, ground, no_ground);
-        std::cout << points->size() << ", ground: " << ground->size() << ", no_ground: " << no_ground->size()
-                  << std::endl;
+    if (auto filter = GroundSegFactory::BuildT<std::shared_ptr>(pc_utils::ns("PatchWorkGroundEstimator"),
+                                                                config["PatchWorkGroundEstimator"]);filter) {
+        {
+            Timer timer("PatchWorkGroundEstimator");
+            filter->estimate(points, ground, non_ground);
+        }
+        display_ground_seg_result("PatchWorkGroundEstimator", points, ground);
+    }
+
+    if (auto filter = GroundSegFactory::BuildT<std::shared_ptr>(pc_utils::ns("RingShapedElevationConjunctionMap"),
+                                                                config["RingShapedElevationConjunctionMap"]);filter) {
+        {
+            Timer timer("RingShapedElevationConjunctionMap");
+            filter->estimate(points, ground, non_ground);
+        }
+        display_ground_seg_result("RingShapedElevationConjunctionMap", points, ground);
     }
 }
 
@@ -238,9 +260,20 @@ void display_filter_result(const std::string &name, T &&input, T &&output) {
     viewer.addPointCloud(input, "input");
     pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> output_color(input, 0, 255, 0);
     viewer.addPointCloud(output, output_color, "output");
-    while (not viewer.wasStopped()) {
-        boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
-        viewer.spinOnce();
-    }
+    viewer.spin();
+    viewer.close();
+}
+
+template<class T>
+void display_ground_seg_result(const std::string &name, T &&input, T &&output) {
+    std::cout << "[" + name + "]: " << input->size() << " pts -> " << output->size() << " pts" << std::endl;
+    pcl::visualization::PCLVisualizer viewer(name);
+    viewer.resetCamera();
+    viewer.setBackgroundColor(0.1, 0.1, 0.1);
+    viewer.addCoordinateSystem();
+    viewer.addPointCloud(input, "input");
+    pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> output_color(input, 0, 255, 0);
+    viewer.addPointCloud(output, output_color, "output");
+    viewer.spin();
     viewer.close();
 }

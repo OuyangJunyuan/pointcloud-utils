@@ -17,9 +17,13 @@
 #define PC_UTILS_CLASS_CONSTRUCTION             (const YAML::Node &)(const Params &)
 #define PC_UTILS_TEMPLATE_SPECIALIZATION_LIST   PC_UTILS_GROUND_ESTIMATOR_TYPE
 
+#define PC_UTILS_GROUND_ESTIMATOR_TYPE          \
+define( RansacGroundEstimator               )   \
+define( PatchWorkGroundEstimator            )   \
+define( RingShapedElevationConjunctionMap   )
+
 using namespace std;
 using namespace YAML;
-
 
 namespace pc_utils {
 
@@ -519,7 +523,6 @@ define(float, min_ring     , {0.f}          )   \
 define(float, max_ring     , {50.f}         )   \
 define(int  , num_scan     , {36}           )
 
-#include "detail/member_define.h"
 
     struct RegionField {
         int point_id{-1}, ring_id{-1}, scan_id{-1}, ind{-1};
@@ -553,6 +556,8 @@ define(int  , num_scan     , {36}           )
         non_ground.reserve(num_points);
         recm.resize(num_grid, FLT_MAX);
     }
+
+#include "detail/member_define.h"
 
 public:
 
@@ -596,8 +601,8 @@ public:
                 non_ground.push_back(rn.point_id);
             }
         }
-        cloud_ground = pcl::PointCloud<PointT>::Ptr(new pcl::PointCloud<PointT>(*cloud_in, ground));
-        cloud_no_ground = pcl::PointCloud<PointT>::Ptr(new pcl::PointCloud<PointT>(*cloud_in, non_ground));
+        cloud_ground = typename pcl::PointCloud<PointT>::Ptr(new pcl::PointCloud<PointT>(*cloud_in, ground));
+        cloud_no_ground = typename pcl::PointCloud<PointT>::Ptr(new pcl::PointCloud<PointT>(*cloud_in, non_ground));
     };
 
 };

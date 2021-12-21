@@ -11,9 +11,7 @@
  * @typedef PatchWorkGroundEstimator
  * @typedef RingShapedElevationConjunctionMap
  */
-#define PC_UTILS_GROUND_ESTIMATOR_TYPE  \
-define( RansacGroundEstimator       )   \
-define( PatchWorkGroundEstimator    )
+
 
 namespace pc_utils {
 
@@ -21,8 +19,8 @@ template<class PointT>
 class GroundEstimator {
 public:
     virtual void estimate(const typename pcl::PointCloud<PointT>::Ptr &cloud_in,
-                                 typename pcl::PointCloud<PointT>::Ptr &cloud_ground,
-                                 typename pcl::PointCloud<PointT>::Ptr &cloud_no_ground) = 0;
+                          typename pcl::PointCloud<PointT>::Ptr &cloud_ground,
+                          typename pcl::PointCloud<PointT>::Ptr &cloud_no_ground) = 0;
 
 };
 
