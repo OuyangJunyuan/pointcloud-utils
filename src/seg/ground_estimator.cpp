@@ -19,6 +19,8 @@
 
 using namespace std;
 using namespace YAML;
+
+
 namespace pc_utils {
 
 
@@ -497,6 +499,108 @@ public:
     }
 };
 
+
+/**
+ * @brief 基于环形联合高程图的地面分割算法
+ * @brief RingShapedElevationConjunctionMap
+ * @tparam PointT: point type
+ */
+template<class PointT>
+class RingShapedElevationConjunctionMap final : PC_UTILS_BASE_LIST(RingShapedElevationConjunctionMap) {
+#define PC_UTILS_CLASS                          \
+RingShapedElevationConjunctionMap
+
+#define PC_UTILS_MEMBER_VARIABLE                \
+define(float, sensor_height, {0.f}          )   \
+define(float, th_g         , {0.2f}         )   \
+define(float, max_slope    , {M_PIf32/12}   )   \
+define(float, delta_ring   , {2.0f}         )   \
+define(float, min_ring     , {0.f}          )   \
+define(float, max_ring     , {50.f}         )   \
+define(int  , num_scan     , {36}           )
+
+#include "detail/member_define.h"
+
+    struct RegionField {
+        int point_id{-1}, ring_id{-1}, scan_id{-1}, ind{-1};
+    };
+    int num_ring{0}, num_grid{0}, num_points{0};
+    std::vector<float> recm;
+    std::vector<int> ground, non_ground;
+    std::vector<RegionField> indices;
+
+    inline int get_ring_ind(const float &range) const {
+        return static_cast<int>(floorf((range - min_ring) / delta_ring));
+    }
+
+    inline float get_xoy_angle(const float &y, const float &x) const {
+        static float pix2 = 2.0f * M_PIf32;
+        auto xoy_angle = atan2f(y, x);
+        return xoy_angle < 0 ? xoy_angle + pix2 : xoy_angle;
+    }
+
+    inline int get_scan_ind(const float &y, const float &x) const {
+        static float pix2 = 2.0f * M_PIf32;
+        return static_cast<int>(floorf(num_scan * (get_xoy_angle(y, x) / pix2)));
+    }
+
+    inline void reset() {
+        indices.clear();
+        ground.clear();
+        non_ground.clear();
+        indices.reserve(num_points);
+        ground.reserve(num_points);
+        non_ground.reserve(num_points);
+        recm.resize(num_grid, FLT_MAX);
+    }
+
+public:
+
+    void estimate(const typename pcl::PointCloud<PointT>::Ptr &cloud_in,
+                  typename pcl::PointCloud<PointT>::Ptr &cloud_ground,
+                  typename pcl::PointCloud<PointT>::Ptr &cloud_no_ground) override {
+
+        num_points = static_cast<int>(cloud_in->size());
+        num_ring = static_cast<int>(floorf(max_ring - min_ring) / delta_ring);
+        num_grid = num_ring * num_scan;
+
+        reset();
+
+        for (int i = 0; i < num_points; ++i) {
+            auto &pt = cloud_in->points[i];
+            auto r = sqrtf(pt.x * pt.x + pt.y * pt.y);
+            if (min_ring < r and r < max_ring) {
+                auto ring_ind = get_ring_ind(r);
+                auto scan_ind = get_scan_ind(pt.y, pt.x);
+                auto ind = ring_ind + scan_ind * num_ring; // ring优先存储.
+                indices.push_back({i, ring_ind, scan_ind, ind});
+
+                auto &lowest_in_this_grid = recm[ind];
+                lowest_in_this_grid = std::fmin(lowest_in_this_grid, pt.z);
+            }
+        }
+
+        float delta_ring_x_tan_max_slope = delta_ring * tanf(max_slope);
+        float lowest_in_previous_grid = -sensor_height;
+        for (int i = 0; i < num_grid; ++i) {
+            if (i % num_ring != 0) {
+                recm[i] = fmin(recm[i], lowest_in_previous_grid + delta_ring_x_tan_max_slope);
+            }
+            lowest_in_previous_grid = recm[i];
+        }
+
+        for (auto &&rn: indices) {
+            if (cloud_in->points[rn.point_id].z < recm[rn.ind] + th_g) {
+                ground.push_back(rn.point_id);
+            } else {
+                non_ground.push_back(rn.point_id);
+            }
+        }
+        cloud_ground = pcl::PointCloud<PointT>::Ptr(new pcl::PointCloud<PointT>(*cloud_in, ground));
+        cloud_no_ground = pcl::PointCloud<PointT>::Ptr(new pcl::PointCloud<PointT>(*cloud_in, non_ground));
+    };
+
+};
 
 }  // namespace pc_utils
 #include "detail/template_specialization.h"

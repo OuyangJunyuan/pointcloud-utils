@@ -40,6 +40,18 @@ GroundEstimator:
     # 平坦度阈值过滤后处理，大于阈值的地面点将被抛弃
     flatness_thr: [ 0.0, 0.000125, 0.000185, 0.000185 ]
 
+  RingShapedElevationConjunctionMap:
+    sensor_height: 2
+    th_g: 0.5
+    max_slope: 0.261 # pi/12 = 15 or 0.261
+
+    num_scan: 30
+    delta_ring: 2
+    min_ring: 2
+    max_ring: 50
+
+
+
   RansacGroundEstimator:
     max_iter_num: 1000
     max_dis: 0.1

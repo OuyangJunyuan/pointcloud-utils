@@ -9,6 +9,7 @@
 /**
  * @typedef RansacGroundEstimator
  * @typedef PatchWorkGroundEstimator
+ * @typedef RingShapedElevationConjunctionMap
  */
 #define PC_UTILS_GROUND_ESTIMATOR_TYPE  \
 define( RansacGroundEstimator       )   \
